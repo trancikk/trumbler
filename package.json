@@ -1,0 +1,19 @@
+{
+  "name": "trumbler",
+  "version": "1.0.0",
+  "description": "Platform to sell image and video content",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=@trumbler/backend",
+    "dev:frontend": "npm run dev --workspace=@trumbler/frontend",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
