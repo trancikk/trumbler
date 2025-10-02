@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CREATOR
+  VIEWER
+}
+
+enum ContentType {
+  VIDEO
+  IMAGE
+}
+
+enum PaymentMethod {
+  CARD
+  CRYPTO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creatorProfile CreatorProfile?
+  purchases      Purchase[]
+  subscriptions  Subscription[]
+}
+
+model CreatorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paypalEmail     String?
+  cryptoAddress   String?
+  billingInfo     Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  content Content[]
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+
+  content Content[]
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  content Content[]
+}
+
+model Content {
+  id               String      @id @default(uuid())
+  title            String
+  description      String?
+  type             ContentType
+  fullFilePath     String
+  previewFilePath  String?
+  price            Decimal     @db.Decimal(10, 2)
+  creatorId        String
+  creator          CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  categories       Category[]
+  tags             Tag[]
+  purchases        Purchase[]
+}
+
+model Purchase {
+  id            String        @id @default(uuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId     String
+  content       Content       @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  paymentId     String
+  createdAt     DateTime      @default(now())
+
+  @@unique([userId, contentId])
+}
+
+model Subscription {
+  id            String             @id @default(uuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        SubscriptionStatus
+  startDate     DateTime
+  endDate       DateTime
+  monthlyPrice  Decimal            @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  stripeSubId   String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
